@@ -1,0 +1,222 @@
+﻿using MaterialDesignThemes.Wpf;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using System.Windows.Navigation;
+using System.Windows.Shapes;
+
+namespace Lab6App
+{
+    /// <summary>
+    /// Interaction logic for MainWindow.xaml
+    /// </summary>
+    public partial class MainWindow : Window
+    {
+        HostMessage message;
+        ComPort cp;
+
+        public MainWindow()
+        {
+            InitializeComponent();
+            message = new HostMessage();
+            getPorts(cbPort);
+        }
+
+        public void ShowMessage(string s)
+        {
+            message.SetText(s);
+            DialogHost.CloseDialogCommand.Execute(null, null);
+            hostMessage.ShowDialog(message);
+            return;
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            ShowMessage("Привет");
+        }
+
+        public static string[] RemoveDuplicates(string[] s)
+        {
+            HashSet<string> set = new HashSet<string>(s);
+            string[] result = new string[set.Count];
+            set.CopyTo(result);
+            return result;
+        }
+
+        private void getPorts(ComboBox cb)
+        {
+            string name = cb.Text;
+            cb.Items.Clear();
+            string[] st = RemoveDuplicates(ComPort.Ports);
+            Array.Sort(st);
+            Array.Sort(st, (x, y) => x.Length.CompareTo(y.Length));
+            for (int i = 0; i < st.Length; i++)
+            {
+                cb.Items.Add(st[i]);
+                if (name == st[i])
+                    cb.SelectedIndex = i;
+            }
+            if (cb.SelectedIndex < 0)
+            {
+                if (cb.Items.Count > 0)
+                {
+                    cbPort.SelectedIndex = 0;
+                }
+                else
+                {
+                    cbPort.SelectedIndex = -1;
+                }
+            }
+            cb.Items.Refresh();
+        }
+
+        private void cbPort_DropDown(object sender, EventArgs e)
+        {
+            ComboBox cb = (ComboBox)sender;
+            getPorts(cb);
+        }
+
+        private void UsrEdit_PreviewKeyUp(object sender, KeyEventArgs e)
+        {
+            TextBox tb = (TextBox)sender;
+            string txt = tb.Text.Replace(" ", "").ToUpper();
+            int pos = tb.CaretIndex;
+            bool isEnd = false;
+            if ((tb.Text.Length == 0) || ((pos == tb.Text.Length) && (tb.Text[tb.Text.Length - 1] != ' ')))
+                isEnd = true;
+            string o = "";
+            for (int i = 0; i < txt.Length; i += 2)
+            {
+                try
+                {
+                    o += txt.Substring(i, 2) + " ";
+                }
+                catch
+                {
+                    try
+                    {
+                        o += txt.Substring(i, 1);
+                    }
+                    catch
+                    {
+
+                    }
+                }
+            }
+            tb.Text = o;
+            if (isEnd == true)
+                pos = tb.Text.Length;
+            if (pos > tb.Text.Length)
+                pos = tb.Text.Length;
+            if (pos < 0) pos = 0;
+            tb.CaretIndex = pos;
+        }
+
+        private bool isHexDigit(string text)
+        {
+            char sym = text[text.Length - 1];
+            if (char.IsDigit(sym))
+                return true;
+            if (sym == ' ') return true;
+            if ((sym >= 'A') && (sym <= 'F')) return true;
+            return false;
+        }
+
+        private void UsrEdit_PreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            e.Handled = !isHexDigit(e.Text.ToUpper());
+        }
+
+        private void btnSend_Click(object sender, RoutedEventArgs e)
+        {
+            if (cp == null)
+            {
+                ShowMessage("Не выбран COM-порт");
+                return;
+            }
+            if (tbCmd.Text.Length < 2)
+            {
+                ShowMessage("Команда не введена!");
+                return;
+            }
+            cp.Send(tbCmd.Text);
+        }
+
+        private void FlowDocumentScrollViewer_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            Fd.Blocks.Clear();
+        }
+
+        private void btnCrc_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                tbCmd.Text = AddCRC(tbCmd.Text);
+            }
+            catch (Exception ex)
+            {
+                ShowMessage(ex.Message);
+            }
+        }
+
+        internal static string AddCRC(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                throw new Exception("Команда не введена!");
+            }
+            byte[] cmd = ComPort.HexToByte(text);
+            if (cmd.Length == 0) return text;
+
+            int CRC = 0xFFFF;
+            for (int p = 0; p < cmd.Length; p++)
+            {
+                CRC ^= (int)cmd[p];          // XOR byte into least sig. byte of crc
+                for (int i = 8; i != 0; i--)      // Loop over each bit
+                {
+                    if ((CRC & 0x0001) != 0)        // If the LSB is set
+                    {
+                        CRC >>= 1;                    // Shift right and XOR 0xA001
+                        CRC ^= 0xA001;
+                    }
+                    else                            // Else LSB is not set
+                        CRC >>= 1;                    // Just shift right
+                }
+            }
+            byte[] crc = new byte[2];
+            crc[0] = (byte)(CRC & 0xFF);
+            crc[1] = (byte)((CRC & 0xFF00) >> 8);
+            string s = ComPort.ByteToHex(cmd);
+            s += Convert.ToString(crc[0], 16).ToUpper().PadLeft(2, '0');
+            s += " " + Convert.ToString(crc[1], 16).ToUpper().PadLeft(2, '0');
+            return s;
+        }
+
+        private void btnConnect_Click(object sender, RoutedEventArgs e)
+        {
+            if (cp != null)
+            {
+                if(cp.IsOpened)
+                    cp.Close();
+                //cp.Dispose();
+                cbPort.Background = Brushes.White;
+            }
+            cp = new ComPort(Fd);
+            cp.Config(cbPort.Text, cbBaud.Text, cbParity.SelectedIndex, cbStop.Text);
+            cp.Open();
+        }
+
+        private void btnClose_Click(object sender, RoutedEventArgs e)
+        {
+            if (cp != null)
+            {
+                cp.Close();
+            }
+        }
+    }
+}

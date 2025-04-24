@@ -1,0 +1,33 @@
+﻿<UserControl x:Class="Lab6App.HostMessage"
+xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+xmlns:local="clr-namespace:Lab6App"
+mc:Ignorable="d" MinWidth="200" MinHeight="100">
+    <Grid>
+        <StackPanel>
+            <StackPanel Orientation="Vertical">
+                <StackPanel Orientation="Horizontal" Margin="10" HorizontalAlignment="Center">
+                    <materialDesign:PackIcon Kind="WarningOutline" VerticalAlignment="Center" Name="MessageIcon" Width="20" Height="20" Margin="0 0 10 0"/>
+                    <TextBlock Name="MessageText" FontSize="14" TextWrapping="Wrap" MaxWidth="400" Margin="10" VerticalAlignment="Center"/>
+
+                </StackPanel>
+                <TextBlock Name="BoldText" FontSize="14" FontWeight="Bold" VerticalAlignment="Center" TextWrapping="Wrap" MaxWidth="600" Margin="15 5" Foreground="Green" Visibility="Collapsed"/>
+                <Button
+Style="{StaticResource MaterialDesignFlatButton}"
+IsDefault="True"
+Margin="10" MaxWidth="300"
+Content="Закрыть"
+Command="{x:Static materialDesign:DialogHost.CloseDialogCommand}" Cursor="Hand">
+                    <Button.CommandParameter>
+                        <system:Boolean xmlns:system="clr-namespace:System;assembly=mscorlib">
+                            True
+                        </system:Boolean>
+                    </Button.CommandParameter>
+                </Button>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</UserControl>
