@@ -1,5 +1,8 @@
 ﻿using MaterialDesignThemes.Wpf;
+using Microsoft.Win32;
+using System.IO;
 using System.Text;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -9,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 
 namespace Lab6App
 {
@@ -19,12 +23,89 @@ namespace Lab6App
     {
         HostMessage message;
         ComPort cp;
-
+        SaveFileDialog sfd;
+        StreamWriter sw = null;
+        System.Timers.Timer timer;
+        Union uni1;
+        Union uni2;
+        string filename;
         public MainWindow()
         {
             InitializeComponent();
             message = new HostMessage();
             getPorts(cbPort);
+            sfd = new SaveFileDialog();
+            sfd.Filter = "Текстовый файл | *.txt | Все файлы | *.*";
+            timer = new System.Timers.Timer();
+            timer.Interval = 500;
+            timer.Elapsed += Timer_Elapsed;
+            uni1 = new Union();
+            uni2 = new Union();
+        }
+
+        private void Timer_Elapsed(object? sender, ElapsedEventArgs e)
+        {
+            if (cp == null)
+            {
+                ShowMessage("Не выбран COM-порт");
+                timer.Stop();
+                return;
+            }
+            getResponse();
+            cp.Send("05 04 00 02 00 04 51 8D");
+        }
+
+        private void getResponse()
+        {
+            string z = cp.ResponseString;
+            if (string.IsNullOrEmpty(z))
+                return;
+            byte[] data = ComPort.HexToByte(z);
+            int crc = getCRC(data, data.Length - 2);
+            int rcrc = (data[data.Length - 1] << 8) | data[data.Length - 2];
+            if (crc != rcrc) return;
+
+            uni1.byte1 = data[4];
+            uni1.byte2 = data[3];
+            uni1.byte3 = data[6];
+            uni1.byte4 = data[5];
+
+            uni2.byte1 = data[8];
+            uni2.byte2 = data[7];
+            uni2.byte3 = data[10];
+            uni2.byte4 = data[9];
+
+            Dispatcher.Invoke(() =>
+            {
+                channel1.Text = uni1.f.ToString("0.000000");
+                channel2.Text = uni2.f.ToString("0.000000");
+            });
+
+            if(sw != null)
+            {
+                sw.Write(uni1.f.ToString("0.000000"));
+                sw.WriteLine("\t" + uni2.f.ToString("0.000000"));
+            }
+        }
+
+        int getCRC(byte[] array, int length)
+        {
+            int CRC = 0xFFFF;
+            for (int p = 0; p < length; p++)
+            {
+                CRC ^= (int)array[p]; // XOR byte into least sig. byte of crc
+                for (int i = 8; i != 0; i--) // Loop over each bit
+                {
+                    if ((CRC & 0x0001) != 0) // If the LSB is set
+                    {
+                        CRC >>= 1; // Shift right and XOR 0xA001
+                        CRC ^= 0xA001;
+                    }
+                    else // Else LSB is not set
+                        CRC >>= 1; // Just shift right
+                }
+            }
+            return CRC;
         }
 
         public void ShowMessage(string s)
@@ -216,6 +297,38 @@ namespace Lab6App
             if (cp != null)
             {
                 cp.Close();
+            }
+        }
+
+        private void btnSave_Click(object sender, RoutedEventArgs e)
+        {
+            if(sfd.ShowDialog() == true)
+            {
+                filename = sfd.FileName;
+            }
+
+        }
+
+        private void btnRun_Click(object sender, RoutedEventArgs e)
+        {
+            if (timer.Enabled == false)
+            {
+                timer.Start();
+                if (string.IsNullOrEmpty(filename))
+                {
+                    ShowMessage("Не выбрал файл");
+                    return;
+                }
+                sw = new StreamWriter(filename);
+            }    
+            else
+            {
+                timer.Stop();
+                if(sw != null)
+                {
+                    sw.Close();
+                }
+                sw = null;
             }
         }
     }

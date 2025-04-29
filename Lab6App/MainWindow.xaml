@@ -120,17 +120,17 @@ HorizontalAlignment="Center" Foreground="White" Width="40" Height="40" materialD
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.ColumnSpan="3" Grid.Row="0" Text="Нажмите на кнопку, чтобы считать значение напряжения с потенциометров" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{StaticResource MaterialDesignBodyLargeTextBlock}" FontSize="20" FontWeight="Bold"/>
                                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                    <Button Grid.Column="0" Grid.Row="1" Content="Начать" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 0 10 0"/>
-                                    <Button Grid.Column="3" Grid.Row="1" Content="Сохранить" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10 0 0 0"/>
+                                    <Button Grid.Column="0" Grid.Row="1" Content="Начать" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0 0 10 0" Click="btnRun_Click"/>
+                                    <Button Grid.Column="3" Grid.Row="1" Content="Сохранить" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10 0 0 0" Click="btnSave_Click" ToolTip="Запросить"/>
                                 </StackPanel>
                                 <TextBlock Grid.Row="2" Grid.Column="0" Text="Напряжение (первый канал)" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{StaticResource MaterialDesignBodyLargeTextBlock}"/>
                                 <TextBlock Grid.Row="3" Grid.Column="0" Text="Напряжение (второй канал)" HorizontalAlignment="Center" VerticalAlignment="Center" Style="{StaticResource MaterialDesignBodyLargeTextBlock}"/>
                                 <StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                    <TextBox Text="Данные" HorizontalAlignment="Center" VerticalAlignment="Center" Width="150"/>
+                                    <TextBox Text="Данные" HorizontalAlignment="Center" VerticalAlignment="Center" Width="150" Name="channel1"/>
                                     <TextBlock Text="В" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                                 <StackPanel Grid.Row="3" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center">
-                                    <TextBox Text="Данные" HorizontalAlignment="Center" VerticalAlignment="Center" Width="150"/>
+                                    <TextBox Text="Данные" HorizontalAlignment="Center" VerticalAlignment="Center" Width="150" Name="channel2"/>
                                     <TextBlock Text="В" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </StackPanel>
                             </Grid>

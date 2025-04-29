@@ -18,6 +18,7 @@ namespace Lab6App
         string Response;
         System.Timers.Timer timResponse;
         int responseCnt;
+        public string ResponseString { get; private set; }
 
         public static string[] Ports { get { return SerialPort.GetPortNames(); } }
 
@@ -140,6 +141,7 @@ namespace Lab6App
                     comPort.Write(newMsg, 0, newMsg.Length);
                     string s = ByteToHex(newMsg);
                     DisplayData(App.brushGray, s);
+                    ResponseString = "";
                 }
                 return true;
             }
@@ -193,6 +195,7 @@ namespace Lab6App
             }
             if ((h != null) && (h.Length >= 2))
             {
+                ResponseString = Response;
                 DisplayData(App.brushIndigo, Response);
             }
             Response = "";
