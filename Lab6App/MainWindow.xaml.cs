@@ -37,7 +37,7 @@ namespace Lab6App
             sfd = new SaveFileDialog();
             sfd.Filter = "Текстовый файл | *.txt | Все файлы | *.*";
             timer = new System.Timers.Timer();
-            timer.Interval = 500;
+            timer.Interval = 1000;
             timer.Elapsed += Timer_Elapsed;
             uni1 = new Union();
             uni2 = new Union();
