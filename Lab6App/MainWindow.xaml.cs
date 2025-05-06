@@ -1,5 +1,8 @@
-﻿using MaterialDesignThemes.Wpf;
+﻿using LiveCharts.Wpf;
+using LiveCharts;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Timers;
@@ -24,18 +27,25 @@ namespace Lab6App
         HostMessage message;
         ComPort cp;
         SaveFileDialog sfd;
+        OpenFileDialog ofd;
         StreamWriter sw = null;
         System.Timers.Timer timer;
         Union uni1;
         Union uni2;
         string filename;
+        string sep = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator;
+        public Func<double, string> YFormatter { get; set; }
+        public SeriesCollection SeriesCollection { get; set; }
+
         public MainWindow()
         {
             InitializeComponent();
             message = new HostMessage();
             getPorts(cbPort);
             sfd = new SaveFileDialog();
+            ofd = new OpenFileDialog();
             sfd.Filter = "Текстовый файл | *.txt | Все файлы | *.*";
+            ofd.Filter = "Текстовый файл|*.txt|Все файлы|*.*";
             timer = new System.Timers.Timer();
             timer.Interval = 1000;
             timer.Elapsed += Timer_Elapsed;
@@ -329,6 +339,66 @@ namespace Lab6App
                     sw.Close();
                 }
                 sw = null;
+            }
+        }
+
+        private void btnOpen_Click(object sender, RoutedEventArgs e)
+        {
+            if (ofd.ShowDialog() == true)
+            {
+                StreamReader sr = new StreamReader(ofd.FileName);
+                ChartValues<double> cv1 = new ChartValues<double>();
+                ChartValues<double> cv2 = new ChartValues<double>();
+                do
+                {
+                    try
+                    {
+                        string ss = sr.ReadLine();
+                        if (string.IsNullOrEmpty(ss)) break;
+                        string[] parts = ss.Split('\t');
+                        if (parts.Length == 2)
+                        {
+                            //double val1 = double.Parse(parts[0].Replace(",", sep).Replace(".", sep), CultureInfo.InvariantCulture);
+                            //double val2 = double.Parse(parts[1].Replace(",", sep).Replace(".", sep), CultureInfo.InvariantCulture);
+                            
+                        }
+                        cv1.Add(double.Parse(parts[0].Replace(",", sep).Replace(".", sep)));
+                        cv2.Add(double.Parse(parts[1].Replace(",", sep).Replace(".", sep)));
+                        // cv.Add(double.Parse(ss.Replace(",", sep).Replace(".", sep)));
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                } while (true);
+                sr.Close();
+                SeriesCollection = new SeriesCollection
+                {
+                    new LineSeries
+                    {
+                        LineSmoothness = 0.1,
+                        PointGeometry = null,
+                        Fill = Brushes.Transparent,
+                        Stroke = Brushes.Indigo,
+                        Values = cv1,
+                    },
+                    new LineSeries
+                    {
+                        LineSmoothness = 0.1,
+                        PointGeometry = null,
+                        Fill = Brushes.Transparent,
+                        Stroke = Brushes.Red,
+                        Values = cv2,
+                    }
+                };
+
+                YFormatter = value => ((double)value).ToString("0.00");
+
+                DataContext = this;
+                Diag.AxisX[0].MaxValue = cv1.Count;
+                Diag.AxisY[0].MaxValue = 3.0;
+                Diag.AxisX[0].SetRange(0, cv1.Count);
+                Diag.AxisY[0].SetRange(0, 3.01);
             }
         }
     }

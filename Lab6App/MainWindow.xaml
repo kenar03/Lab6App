@@ -4,6 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
         xmlns:local="clr-namespace:Lab6App"
         mc:Ignorable="d"
         WindowStartupLocation="CenterScreen"
@@ -147,10 +148,25 @@ HorizontalAlignment="Center" Foreground="White" Width="40" Height="40" materialD
                         <TabItem.Content>
                             <Grid>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="50"/>
+                                    <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
-                                <Button Grid.Row="0" Content="Построить график из файла"/>
+                                <StackPanel Grid.Row ="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="20">
+                                    <Button Style="{StaticResource MaterialDesignFloatingActionMiniButton}" materialDesign:ElevationAssist.Elevation="Dp1" Margin="5 0" Click="btnOpen_Click" ToolTip="Запросить"
+HorizontalAlignment="Center" Foreground="White" Name="btnOpen" Width="40" Height="40" materialDesign:ShadowAssist.ShadowAnimationDuration="1" >
+                                        <materialDesign:PackIcon Kind="Folder" Height="24" Width="24"/>
+                                    </Button>
+                                </StackPanel>
+                                <materialDesign:Card Grid.Row="1" Height="Auto" Margin="10 5" Padding="5 10" Name="chart">
+                                    <lvc:CartesianChart Name="Diag" Series="{Binding SeriesCollection}" DisableAnimations="True" Hoverable="False" DataTooltip="{x:Null}" Zoom="X">
+                                        <lvc:CartesianChart.AxisX>
+                                            <lvc:Axis DisableAnimations="True" Foreground="Gray" FontSize="12" MinValue="0" MaxValue="10"/>
+                                        </lvc:CartesianChart.AxisX>
+                                        <lvc:CartesianChart.AxisY>
+                                            <lvc:Axis DisableAnimations="True" Foreground="Gray" FontSize="12" MinValue="0" MaxValue="3" LabelFormatter="{Binding YFormatter}"></lvc:Axis>
+                                        </lvc:CartesianChart.AxisY>
+                                    </lvc:CartesianChart>
+                                </materialDesign:Card>
                             </Grid>
                         </TabItem.Content>
 
